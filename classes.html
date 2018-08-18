@@ -1,0 +1,317 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Competentie tracker - beheer klassen</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=2.0">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+    <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.validate/1.7/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script src="./js/functions.js"></script>    
+    <script src="./js/config.js"></script>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+          <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+              <li class="nav-item active">
+                <a class="nav-link" href="index.html">Home <span class="sr-only">(current)</span></a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="competences.html">Competenties</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="#">Klassen</a>
+              </li>
+            </ul>
+          </div>
+    </nav>
+    <div id="content">
+        <!-- List of schoolclasses -->
+        <div id="listClasses">
+                <h1 class="display-1">Klassen</h1>
+                <table id="classesTable" class="table">
+                <thead class="thead-dark">
+                    <th>Naam</th>
+                    <th>Schooljaar</th>
+                    <th></th>
+                </thead>
+                <tbody></tbody>
+                </table>
+                <button type="button" class="btn btn-primary" id="gotoNewClassButton">Nieuwe klas</button>
+        </div>
+
+        <!-- Create / Edit class -->
+        <div id="editClass" class="container" style="display:none;">
+            <h1 class="display-1" id="detailTitle">Detail klas</h1>
+            <form id="classDetailForm">
+                <div class="form-group">
+                    <label for="name" class="form-control-label" >Naam:</label>
+                    <input type="text" id="name" name="name" class="form-control" placeholder="Vul een naam in" required />
+                </div>
+                <div class="form-group">
+                    <label for="schoolyear">Schooljaar</label>
+                    <select id="schoolyear" name="schoolyear" class="form-control" required>
+                      <option selected>2018-2019</option>
+                      <option>2019-2020</option>
+                      <option>2020-2021</option>
+                    </select>
+                </div>
+                <h1 class="display-5">Studenten</h1>
+                <table class="table" id="studentsTable">
+                    <thead class="thead-inverse">
+                    <th>Voornaam</th>
+                    <th>Naam</th>
+                    <th></th>
+                </thead>
+                <tbody></tbody>
+                </table>
+                <button type="button" id="backToClassesButton" class="btn btn-primary">Terug naar overzicht</button>
+                <button type="button" class="btn btn-primary" id="goToNewStudent" >Voeg student toe</button>
+                <button type="button" class="btn btn-success" id="saveClassButton">Sla op</button>
+            </form>
+          </div>
+
+        <!-- Create / Edit student -->
+        <div id="editStudent" class="container" style="display:none";>
+            <h1 class="display-1" id="detailStudentTitle">Detail student</h1>
+            <form id="studentDetailForm">
+                <div class="form-group">
+                            <label for="studentFirstName" class="form-control-label" >Voornaam:</label>
+                            <input type="text" id="studentFirstName" name="studentFirstName" class="form-control" placeholder="Vul een naam in" required />
+                        </div>
+                <div class="form-group">
+                    <label for="studentName" class="form-control-label" >Naam:</label>
+                    <input type="text" id="studentName" name="studentName" class="form-control" placeholder="Vul een naam in" required />
+                </div>
+                <button type="button" id="backToEditClass" class="btn btn-primary">Terug naar bewerken competentie</button>
+                <button type="button" class="btn btn-success" id="saveStudentButton">Voeg toe</button>
+            </form>
+          </div>
+    </div>
+
+  
+  <script>
+        var classes;
+        var activeClass;
+        var activeStudent;
+        addFormValidationToEditClass();
+        addFormValidationToEditStudent();
+        $( document ).ready(function() {
+          fetchClasses();
+          $("#backToClassesButton").click(function(){
+            showClasses();
+          });
+          $("#gotoNewClassButton").click(function(){
+            handleGoToNewClassAction();
+          });
+          $("#saveClassButton").click(function() {
+              handleSaveClassAction();
+          });
+          $("#goToNewStudent").click(function(){
+            handleGoToNewStudentAction();
+          });
+          $("#saveStudentButton").click(function() {
+            handleSaveStudentButton();
+          });
+        });
+
+        /** Actionhandlers */
+        function handleGoToNewStudentAction() {
+          activeStudent = getNewStudent();
+          showDetailStudent();
+          $("#detailStudentTitle").text("Nieuwe student");
+          $("#saveStudentButton").html("Voeg student toe");
+        }
+
+        function handleGoToNewClassAction() {
+          activeClass = getNewSchoolClass();
+          showDetailClass();
+          $("#detailTitle").text("Nieuwe klas");
+        }
+
+        function handleSaveClassAction() {
+          if($("#classDetailForm").valid()) {
+            bindActiveClass();
+              $.ajax({
+                url:applicationConfiguration.backendUrl + "/classes/save",
+                type:"POST",
+                data:JSON.stringify(activeClass),
+                contentType:"application/json; charset=utf-8",
+                dataType:"json",
+                success: function(){
+                  fetchClasses();
+                },
+                error: function(error) {
+                    console.log(error);
+                    alert('An unknown error occured.');
+                }
+              }) 
+            }
+        }
+
+        function handleSaveStudentButton() { 
+          if($("#studentDetailForm").valid()) {
+            bindActiveStudent();
+            if(activeStudent.id == -1) {//new student
+                activeClass.students.push(activeStudent);
+            } else { 
+              for(var i =0; i < activeClass.students.length; i++) { //first find the correct student
+                if(activeClass.students[i].id == activeStudent.id) {
+                  //then bind the new values to it
+                  syncValuesFromActiveStudentToPersistentModel(activeClass.students[i]);
+                  break;
+                }
+              }
+            }
+            showDetailClass();
+          }
+        }
+
+        function syncValuesFromActiveStudentToPersistentModel(persistentStudent) {
+          persistentStudent.name = activeStudent.name;
+          persistentStudent.firstName = activeStudent.firstName;
+        }
+
+        /** Data fetching and binding */
+        function bindActiveClass() { 
+          activeClass.name = $("#name").val();
+          activeClass.schoolYear = $("#schoolyear :selected").text();
+        }
+
+        function bindActiveStudent() {
+          activeStudent.firstName= $("#studentFirstName").val();
+          activeStudent.name = $("#studentName").val();
+        }
+
+        function getNewSchoolClass() {
+          return {id: -1, version: 0, name: '', schoolYear: '', students: []};
+        }
+
+        function getNewStudent() { 
+          return {id: -1, version: 0, name: '', firstName:''};
+        }
+
+        function fetchClasses() { 
+          $.get(applicationConfiguration.backendUrl +"/classes", function(response){
+              classes = response;
+              showClasses();
+            }).fail(function(xhr) {
+                  console.log(xhr);
+                  alert('An unknown error occured.');
+            });
+        }
+
+        function loadEditClass(id) { 
+          $.get(applicationConfiguration.backendUrl +"/classes/" + id, function(response){
+            activeClass = response;  
+            $("#detailTitle").text("Bewerk klas");
+            showDetailClass();
+          }).fail(function(xhr) {
+                  console.log(xhr);
+                  alert('An unknown error occured.');
+          });
+        }
+
+        function loadEditStudent(id) { 
+          for(var i = 0; i < activeClass.students.length; i++) {
+            var student = activeClass.students[i];
+            if(student.id == id) { 
+              activeStudent = student;
+            }
+          }
+          $("#detailStudentTitle").text("Aanpassen student");
+          $("#saveStudentButton").html("Wijzig student");
+          showDetailStudent();
+        }
+
+        /** UI stuff */
+        function showClasses() {
+          renderClasses();
+          hideAllUi();
+          $("#listClasses").show();
+        }
+
+        function renderClasses() {
+          $("#classesTable > tbody").html("");
+          for(var i = 0; i < classes.length; i++) {
+            schoolClass = classes[i];
+            $("#classesTable tbody").append("<tr><td>"+ schoolClass.name +"</td><td>"+ schoolClass.schoolYear +
+              "</td><td><a class=\"fas fa-edit clickable\" onclick=\"loadEditClass("+ schoolClass.id +")\"></a></td></tr>");
+          }
+        }
+
+        function showDetailClass() { 
+          $("#classDetailForm").validate().resetForm();
+          hideAllUi();
+          $("#editClass").show();
+          renderDetailClass();
+        }
+
+        function showDetailStudent() { 
+          $("#studentDetailForm").validate().resetForm();
+          hideAllUi();
+          $("#editStudent").show();
+          renderDetailStudent();
+        }
+
+        function renderDetailStudent() { 
+          $("#studentName").val(activeStudent.name);
+          $("#studentFirstName").val(activeStudent.firstName);
+        }
+
+        function renderDetailClass() {
+          $("#name").val(activeClass.name);
+          $("#description").val(activeClass.description);
+          renderStudents();
+        }
+
+         function renderStudents() { 
+          $("#studentsTable > tbody").html("");
+          for(var i = 0; i < activeClass.students.length; i++) {
+            student = activeClass.students[i];
+            $("#studentsTable tbody").append("<tr><td>"+ student.firstName +
+              "</td><td>"+ student.name +
+              "</td><td><a class=\"fas fa-edit clickable\" onclick=\"loadEditStudent("+ student.id +")\"></a></td></tr>");
+          }
+        }
+
+        function hideAllUi() { 
+          $("#listClasses").hide();
+          $("#editClass").hide();
+          $("#editStudent").hide();
+        }
+
+        /** Form validation */
+        function addFormValidationToEditClass() { 
+            $("#classDetailForm" ).validate({
+				rules: {
+                    name: "required",
+                    schoolyear: "required"
+				},
+				messages: {
+                    name: "Naam is een verplicht veld",
+                    schoolyear: "Schooljaar is een verplicht veld"
+				}
+            });
+        }
+
+        function addFormValidationToEditStudent() { 
+            $("#studentDetailForm").validate( {
+				rules: {
+                    studentName: "required",
+                    studentFirstName: "required"
+				},
+				messages: {
+                    studentName: "Naam is een verplicht veld",
+                    studentFirstName: "Voornaam is een verplicht veld"
+				}
+            });
+        }
+    </script>
+  </body>
+</html>

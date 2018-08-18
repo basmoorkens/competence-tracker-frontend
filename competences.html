@@ -1,0 +1,338 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Competentie tracker - beheer competenties</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=2.0">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+    <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.validate/1.7/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script src="./js/functions.js"></script>    
+    <script src="./js/config.js"></script>
+  <body>
+      <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+          <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+              <li class="nav-item">
+                <a class="nav-link" href="index.html">Home <span class="sr-only">(current)</span></a>
+              </li>
+              <li class="nav-item active">
+                <a class="nav-link" href="#">Competenties</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="classes.html">Klassen</a>
+              </li>
+            </ul>
+          </div>
+    </nav>
+
+    <div id="content">
+
+      <!-- List of competences -->
+      <div id="listCompetences">
+        <h1 class="display-1">Competenties</h1>
+        <table id="competencesTable" class="table">
+          <thead class="thead-dark">
+            <th>Naam</th>
+            <th>beschrijving</th>
+            <th></th>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <button type="button" class="btn btn-primary" id="gotoNewCompetenceButton">Nieuwe competentie</button>
+      </div>
+      
+      <!-- Create / Edit competence -->
+      <div id="editCompetence" class="container" style="display:none;">
+        <h1 class="display-1" id="detailTitle">Detail competentie</h1>
+        <form id="competenceDetailForm">
+          <div class="form-group">
+            <label for="name" class="form-control-label" >Naam:</label>
+            <input type="text" id="name" name="name" class="form-control" placeholder="Vul een naam in" required />
+          </div>
+          <div class="control-group">
+            <label for="description" class="form-control-label" >Beschrijving:</label>
+            <input type="text" id="description" name="description" class="form-control" placeholder="Vul een beschrijving in" />
+          </div>
+          <h1 class="display-5">Sub-competenties</h1>
+          <table class="table" id="subCompetencesTable">
+            <thead class="thead-inverse">
+            <th>Naam</th>
+            <th>Gewicht</th>
+            <th>Beschrijving</th>
+            <th></th>
+          </thead>
+          <tbody></tbody>
+          </table>
+          <button type="button" id="backToCompetencesButton" class="btn btn-primary">Terug naar overzicht</button>
+          <button type="button" class="btn btn-primary" id="goToNewSubCompetence" >Voeg subcompetentie toe</button>
+          <button type="button" class="btn btn-success" id="saveCompetenceButton">Sla op</button>
+        </form>
+      </div>
+
+      <!-- Create / Edit subcompetence -->
+      <div id="editSubCompetence" class="container" style="display:none";>
+        <h1 class="display-1" id="detailSubCompetenceTitle">Detail subcompetentie</h1>
+        <form id="subCompetenceDetailForm">
+            <div class="form-group">
+                <label for="subName" class="form-control-label" >Naam:</label>
+                <input type="text" id="subName" name="subName" class="form-control" placeholder="Vul een naam in" required />
+            </div>
+            <div class="form-group">
+                <label for="subWeight" class="form-control-label" >Gewicht:</label>
+                <input type="number" id="subWeight" name="subWeight" class="form-control" placeholder="Vul een gewicht in" required />
+            </div>
+            <div class="control-group">
+                <label for="subDescription" class="form-control-label" >Beschrijving:</label>
+                <input type="text" id="subDescription" name="subDescription" class="form-control" placeholder="Vul een beschrijving in" />
+            </div>
+          <button type="button" id="backToEditCompetence" class="btn btn-primary">Terug naar bewerken competentie</button>
+          <button type="button" class="btn btn-success" id="saveSubCompetenceButton">Voeg toe</button>
+        </form>
+      </div>
+    </div>
+
+      <script>
+        var competences;
+        var activeCompetence;
+        var activeSubCompetence;
+
+        $( document ).ready(function() {
+          fetchCompetences();
+          addFormValidationToEditCompetence();
+          addFormValidationToEditSubCompetence();
+          $("#backToCompetencesButton").click(function(){
+            showCompetences();
+          });
+          $("#gotoNewCompetenceButton").click(function(){
+            handleGoToNewCompetenceAction();
+          });
+          $("#goToNewSubCompetence").click(function(){
+            handleGoToNewSubCompetenceAction();
+          });
+          $("#saveCompetenceButton").click(function() {
+              handleSaveCompetenceAction();
+          });
+          $("#backToEditCompetence").click(function() {
+            handleBackToEditCompetence();
+          });
+          $("#saveSubCompetenceButton").click(function() {
+            handleSaveSubCompetenceButton();
+          });
+        });
+        
+        /** Actionhandlers */
+        function handleBackToEditCompetence() { 
+          showDetailCompetence();
+        }
+
+        function handleGoToNewCompetenceAction() {
+          activeCompetence = getNewCompetence();
+          showDetailCompetence();
+          $("#detailTitle").text("Nieuwe competentie");
+        }
+
+        function handleGoToNewSubCompetenceAction() {
+          activeSubCompetence = getNewSubCompetence();
+          showDetailSubCompetence();
+          $("#detailSubCompetenceTitle").text("Nieuwe subcompetentie");
+          $("#saveSubCompetenceButton").html("Voeg subcompetentie toe");
+        }
+
+        function handleSaveSubCompetenceButton() { 
+          if($("#subCompetenceDetailForm").valid()) {
+            bindActiveSubCompetence();
+            if(activeSubCompetence.id == -1) {//new subcompetence
+                activeCompetence.subCompetences.push(activeSubCompetence);
+                showDetailCompetence();
+            } else { 
+              for(var i =0; i < activeCompetence.subCompetences.length; i++) { //first find the correct subcompetence
+                if(activeCompetence.subCompetences[i].id == activeSubCompetence.id) {
+                  //then bind the new values to it
+                  syncValuesFromActiveSubCompetenceToPersistentModel(activeCompetence.subCompetences[i]);
+                  showDetailCompetence();
+                  break;
+                }
+              }
+            }
+          }
+        }
+
+        function syncValuesFromActiveSubCompetenceToPersistentModel(persistentSub) {
+          persistentSub.name = activeSubCompetence.name;
+          persistentSub.weight = activeSubCompetence.weight;
+          persistentSub.description = activeSubCompetence.description;
+        }
+
+        function handleSaveCompetenceAction() {
+          if($("#competenceDetailForm").valid()) {
+              bindActiveCompetence();
+              jsonCompetence = JSON.stringify(activeCompetence);
+              $.ajax({
+                url:applicationConfiguration.backendUrl + "/competences/save",
+                type:"POST",
+                data:JSON.stringify(activeCompetence),
+                contentType:"application/json; charset=utf-8",
+                dataType:"json",
+                success: function(){
+                  fetchCompetences();
+                },
+                error: function(error) {
+                    console.log(error);
+                    alert('An unknown error occured.');
+                }
+              }) 
+            }
+        }
+
+        /** Data fetching and binding */
+        function bindActiveCompetence() { 
+          activeCompetence.name = $("#name").val();
+          activeCompetence.description = $("#description").val();
+        }
+        
+        function bindActiveSubCompetence() {
+          activeSubCompetence.name= $("#subName").val();
+          activeSubCompetence.weight = $("#subWeight").val();
+          activeSubCompetence.description = $("#subDescription").val();
+        }
+
+        function fetchCompetences() { 
+          $.get(applicationConfiguration.backendUrl +"/competences", function(response){
+              competences = response;
+              showCompetences();
+            }).fail(function(xhr) {
+                  console.log(xhr);
+                  alert('An unknown error occured.');
+            });
+        }
+
+        function getNewSubCompetence() { 
+          return {id: -1, version: 0, name: '', weight:0, description: ''};
+        }
+
+        function getNewCompetence() {
+          return {id: -1, version: 0, name: '', description: '', subCompetences: []};
+        }
+
+        function loadEditSubCompetence(id) { 
+          for(var i = 0; i < activeCompetence.subCompetences.length; i++) {
+            var sub = activeCompetence.subCompetences[i];
+            if(sub.id == id) { 
+              activeSubCompetence = sub;
+            }
+          }
+          $("#detailSubCompetenceTitle").text("Aanpassen subcompetentie");
+          $("#saveSubCompetenceButton").html("Wijzig subcompetentie");
+          showDetailSubCompetence();
+        }
+
+        function loadEditCompetence(id) { 
+          $.get(applicationConfiguration.backendUrl +"/competences/" + id, function(response){
+            activeCompetence = response;  
+            $("#detailTitle").text("Bewerk competentie");
+            showDetailCompetence();
+          }).fail(function(xhr) {
+                  console.log(xhr);
+                  alert('An unknown error occured.');
+          });
+        }
+
+        /** UI stuff */
+        function showCompetences() {
+          renderCompetences();
+          hideAllUi();
+          $("#listCompetences").show();
+        }
+
+        function showDetailCompetence(competence) { 
+          $("#competenceDetailForm").validate().resetForm();
+          hideAllUi();
+          $("#editCompetence").show();
+          renderDetailCompetence();
+        }
+
+        function showDetailSubCompetence() { 
+          $("#subCompetenceDetailForm").validate().resetForm();
+          hideAllUi();
+          $("#editSubCompetence").show();
+          renderDetailSubCompetence();
+        }
+
+        function renderDetailSubCompetence() { 
+          $("#subName").val(activeSubCompetence.name);
+          $("#subWeight").val(activeSubCompetence.weight);
+          $("#subDescription").val(activeSubCompetence.description);
+        }
+
+        function renderDetailCompetence() {
+          $("#name").val(activeCompetence.name);
+          $("#description").val(activeCompetence.description);
+          renderSubCompetences();
+        }
+
+         function renderSubCompetences() { 
+          $("#subCompetencesTable > tbody").html("");
+          for(var i = 0; i < activeCompetence.subCompetences.length; i++) {
+            subCompetence = activeCompetence.subCompetences[i];
+            $("#subCompetencesTable tbody").append("<tr><td>"+ subCompetence.name +
+              "</td><td>"+ subCompetence.weight +
+              "</td><td>"+ subCompetence.description +
+              "</td><td><a class=\"fas fa-edit clickable\" onclick=\"loadEditSubCompetence("+ subCompetence.id +")\"></a></td></tr>");
+          }
+        }
+
+        function renderCompetences() {
+          $("#competencesTable > tbody").html("");
+          for(var i = 0; i < competences.length; i++) {
+            competence = competences[i];
+            $("#competencesTable tbody").append("<tr><td>"+ competence.name +"</td><td>"+ competence.description +
+              "</td><td><a class=\"fas fa-edit clickable\" onclick=\"loadEditCompetence("+ competence.id +")\"></a></td></tr>");
+          }
+        }
+        
+        function hideAllUi() { 
+          $("#listCompetences").hide();
+          $("#editCompetence").hide();
+          $("#editSubCompetence").hide();
+        }
+        /** Form validation */
+      function addFormValidationToEditCompetence() { 
+          $( "#competenceDetailForm" ).validate( {
+				rules: {
+					name: "required"
+				},
+				messages: {
+					name: "Naam is een verplicht veld"
+				}
+        });
+      }
+      
+      function addFormValidationToEditSubCompetence() { 
+        $("#subCompetenceDetailForm").validate( {
+				rules: {
+          subName: "required",
+          subWeight: {
+            required: true,
+            number: true
+          }
+				},
+				messages: {
+          subName: "Naam is een verplicht veld!",
+          subWeight: {
+            required: "Gewicht is een verplicht veld!",
+            number: "Gewicht moet een getal zijn!"
+          }
+				}
+        });
+      }
+
+      </script>
+  </body>
+</html>
