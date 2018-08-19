@@ -1,0 +1,125 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Competentie tracker - Evaluaties</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=2.0">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+    <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.validate/1.7/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script src="./js/functions.js"></script>    
+    <script src="./js/config.js"></script>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+          <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+              <li class="nav-item">
+                <a class="nav-link" href="index.html">Home <span class="sr-only">(current)</span></a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="competences.html">Competenties</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="classes.html">Klassen</a>
+              </li>
+              <li class="nav-item active">
+                <a class="nav-link" href="#">Evaluaties</a>
+              </li>
+            </ul>
+          </div>
+    </nav>
+    <div id="content">
+      
+      <!-- Create / Edit competence -->
+      <div id="editEvaluation" class="container" style="">
+        <h1 class="display-1" id="detailEvaluationTitle">Detail evaluatie</h1>
+        <form id="evaluationDetailForm">
+          <div class="form-group">
+            <label for="name" class="form-control-label" >Naam:</label>
+            <input type="text" id="name" name="name" class="form-control" placeholder="Vul een naam in" required />
+          </div>
+          <div class="form-group">
+            <label for="schoolClass">Klas</label>
+            <select id="schoolClass" name="schoolClass" class="form-control" required>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="subcompetencesSelect">Te beoordelen subcompetenties</label>
+            <div id="competenceList">
+              
+            </div>
+          </div>
+          <button type="button" id="backToOverview" class="btn btn-primary">Terug naar overzicht</button>
+        </form>
+      </div>
+    </div>
+
+  
+  <script>
+        var availableSchoolClasses =[];
+        var competences = [];
+        addFormValidationToEditEvaluation();
+
+        $( document ).ready(function() {
+          fetchClasses(renderAvailableSchoolClasses);
+          fetchCompetences(renderCompetences)
+        });
+
+        /** Actionhandlers */
+      
+
+        /** Data fetching and binding */
+      
+
+        /** UI stuff */
+        function renderAvailableSchoolClasses(classesToRender) { 
+          availableSchoolClasses = classesToRender;
+          for(var i = 0; i < availableSchoolClasses.length; i++) {
+            $("#schoolClass").append("<option value=\"" + availableSchoolClasses[i].id + "\">" + availableSchoolClasses[i].name + "</option>");
+          }
+        }
+
+        function renderCompetences(competencesToRender) {
+          competences = competencesToRender;
+          var competence;
+          var subCompetence;
+          for(var i = 0; i < competences.length; i++) {
+            competence = competences[i];
+            $("#competenceList").append("<div class=\"compDiv\">");
+            $("#competenceList").append("<h3>" + competence.name + "</h3>");
+            $("#competenceList").append("<ol id=\"comp" + competence.id  + "ol\">");
+            for(var j = 0; j < competence.subCompetences.length; j++) { 
+              subCompetence = competence.subCompetences[j];
+              $("#competenceList").append("<li class=\"listItem selectable\" value=\"" + competence.id + "-" + subCompetence.id + "\">" + subCompetence.name + "</li>");
+            }
+            $("#competenceList").append("</ol>");
+            $("#competenceList").append("</div>");
+          }
+          $(".selectable").click(function(e) {
+              $(this).toggleClass("selected");
+          });
+        }
+
+        /** Form validation */
+        function addFormValidationToEditEvaluation() { 
+          $( "#evaluationDetailForm" ).validate( {
+				rules: {
+					name: "required",
+          schoolClass: "required"
+				},
+				messages: {
+					name: "Naam is een verplicht veld",
+          schoolClass: "Klas is een verplicht veld"
+				}
+        });
+      }
+    </script>
+  </body>
+</html>

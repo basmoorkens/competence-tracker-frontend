@@ -9,10 +9,12 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
     <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.validate/1.7/jquery.validate.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script src="./js/functions.js"></script>    
     <script src="./js/config.js"></script>
   <body>
@@ -27,6 +29,9 @@
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="classes.html">Klassen</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="evaluations.html">Evaluaties</a>
               </li>
             </ul>
           </div>
@@ -98,17 +103,25 @@
       </div>
     </div>
 
-      <script>
+    <div id="dialog-confirm" title="Bevestig verwijderen competentie">
+        <p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;"></span>Bent u zeker dat u deze competentie wilt verwijderen?<br />
+          Alle bijhorende subcompetenties worden ook verwijderd!
+        </p>
+    </div>
+    
+    <script>
         var competences;
         var activeCompetence;
         var activeSubCompetence;
+        var competenceIdToDelete = 0;
 
         $( document ).ready(function() {
-          fetchCompetences();
+          fetchCompetences(showCompetences);
           addFormValidationToEditCompetence();
           addFormValidationToEditSubCompetence();
+          createConfirmDeleteDialog();
           $("#backToCompetencesButton").click(function(){
-            showCompetences();
+            showCompetencesInternal();
           });
           $("#gotoNewCompetenceButton").click(function(){
             handleGoToNewCompetenceAction();
@@ -181,7 +194,7 @@
                 contentType:"application/json; charset=utf-8",
                 dataType:"json",
                 success: function(){
-                  fetchCompetences();
+                  fetchCompetences(showCompetences);
                 },
                 error: function(error) {
                     console.log(error);
@@ -201,16 +214,6 @@
           activeSubCompetence.name= $("#subName").val();
           activeSubCompetence.weight = $("#subWeight").val();
           activeSubCompetence.description = $("#subDescription").val();
-        }
-
-        function fetchCompetences() { 
-          $.get(applicationConfiguration.backendUrl +"/competences", function(response){
-              competences = response;
-              showCompetences();
-            }).fail(function(xhr) {
-                  console.log(xhr);
-                  alert('An unknown error occured.');
-            });
         }
 
         function getNewSubCompetence() { 
@@ -245,7 +248,49 @@
         }
 
         /** UI stuff */
-        function showCompetences() {
+        function refreshAfterDeleteCompetence() { 
+          competenceIdToDelete = 0;
+          fetchCompetences(showCompetences);
+        }
+
+        function openConfirmDeleteDialog(selectedId) {
+          competenceIdToDelete = selectedId;
+          $( "#dialog-confirm" ).dialog("open");
+        }
+
+        function createConfirmDeleteDialog() {
+          $( "#dialog-confirm" ).dialog({
+            autoOpen: false,
+            resizable: false,
+            height: "auto",
+            width: 670,
+            modal: true,
+            buttons: {
+              "Bevestigen": function() {
+                deleteCompetence(competenceIdToDelete, refreshAfterDeleteCompetence)
+                $( this ).dialog( "close" );
+              },
+              Cancel: function() {
+                $( this ).dialog( "close" );
+              }
+            },
+            show: {
+              effect: "blind",
+              duration: 500
+            },
+            hide: {
+              effect: "explode",
+              duration: 500
+            }
+          });
+        }
+
+        function showCompetences(competencesToShow) {
+         competences = competencesToShow;
+          showCompetencesInternal();
+        }
+
+        function showCompetencesInternal() {
           renderCompetences();
           hideAllUi();
           $("#listCompetences").show();
@@ -293,7 +338,8 @@
           for(var i = 0; i < competences.length; i++) {
             competence = competences[i];
             $("#competencesTable tbody").append("<tr><td>"+ competence.name +"</td><td>"+ competence.description +
-              "</td><td><a class=\"fas fa-edit clickable\" onclick=\"loadEditCompetence("+ competence.id +")\"></a></td></tr>");
+              "</td><td><a class=\"fas fa-edit clickable\" onclick=\"loadEditCompetence("+ competence.id +")\"></a>" +
+              "<a class=\"fas fa-trash-alt clickable margined-left\" onclick=\"openConfirmDeleteDialog("+ competence.id +")\"></a></td></tr>");
           }
         }
         
@@ -302,6 +348,7 @@
           $("#editCompetence").hide();
           $("#editSubCompetence").hide();
         }
+
         /** Form validation */
       function addFormValidationToEditCompetence() { 
           $( "#competenceDetailForm" ).validate( {
