@@ -109,16 +109,23 @@
         </p>
     </div>
     
+    <div id="dialog-sub-confirm" title="Bevestig verwijderen subcompetentie">
+      <p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;"></span>Bent u zeker dat u deze subcompetentie wilt verwijderen?
+      </p>
+  </div>
+    
     <script>
         var competences;
         var activeCompetence;
         var activeSubCompetence;
-        var competenceIdToDelete = 0;
+        var competenceIdToDelete = -1;
+        var subCompetenceIndexToDelete = -1;
 
         $( document ).ready(function() {
           fetchCompetences(showCompetences);
           addFormValidationToEditCompetence();
           addFormValidationToEditSubCompetence();
+          createConfirmDeleteSubDialog();
           createConfirmDeleteDialog();
           $("#backToCompetencesButton").click(function(){
             showCompetencesInternal();
@@ -142,16 +149,16 @@
         
         /** Actionhandlers */
         function handleBackToEditCompetence() { 
-          showDetailCompetence();
+          showDetailCompetenceInternal();
         }
 
         function handleGoToNewCompetenceAction() {
-          activeCompetence = getNewCompetence();
-          showDetailCompetence();
           $("#detailTitle").text("Nieuwe competentie");
+          showDetailCompetence(getNewCompetence());
         }
 
         function handleGoToNewSubCompetenceAction() {
+          bindActiveCompetence();
           activeSubCompetence = getNewSubCompetence();
           showDetailSubCompetence();
           $("#detailSubCompetenceTitle").text("Nieuwe subcompetentie");
@@ -163,13 +170,13 @@
             bindActiveSubCompetence();
             if(activeSubCompetence.id == -1) {//new subcompetence
                 activeCompetence.subCompetences.push(activeSubCompetence);
-                showDetailCompetence();
+                showDetailCompetenceInternal();
             } else { 
               for(var i =0; i < activeCompetence.subCompetences.length; i++) { //first find the correct subcompetence
                 if(activeCompetence.subCompetences[i].id == activeSubCompetence.id) {
                   //then bind the new values to it
                   syncValuesFromActiveSubCompetenceToPersistentModel(activeCompetence.subCompetences[i]);
-                  showDetailCompetence();
+                  showDetailCompetenceInternal();
                   break;
                 }
               }
@@ -186,7 +193,6 @@
         function handleSaveCompetenceAction() {
           if($("#competenceDetailForm").valid()) {
               bindActiveCompetence();
-              jsonCompetence = JSON.stringify(activeCompetence);
               $.ajax({
                 url:applicationConfiguration.backendUrl + "/competences/save",
                 type:"POST",
@@ -237,25 +243,32 @@
         }
 
         function loadEditCompetence(id) { 
-          $.get(applicationConfiguration.backendUrl +"/competences/" + id, function(response){
-            activeCompetence = response;  
-            $("#detailTitle").text("Bewerk competentie");
-            showDetailCompetence();
-          }).fail(function(xhr) {
-                  console.log(xhr);
-                  alert('An unknown error occured.');
-          });
+          $("#detailTitle").text("Bewerk competentie");
+          fetchDetailCompetence(id,showDetailCompetence);
+        }
+
+        function deleteSubCompetence(callBack) {
+          activeSubCompetence = null;
+          activeCompetence.subCompetences.splice(subCompetenceIndexToDelete,1);
+          subCompetenceIndexToDelete = -1;
+          callBack();
         }
 
         /** UI stuff */
         function refreshAfterDeleteCompetence() { 
-          competenceIdToDelete = 0;
+          competenceIdToDelete = -1;
           fetchCompetences(showCompetences);
         }
 
         function openConfirmDeleteDialog(selectedId) {
           competenceIdToDelete = selectedId;
           $( "#dialog-confirm" ).dialog("open");
+        }
+
+        function openConfirmDeleteSubDialog(indexInSubCompetencesArray) {
+          activeSubCompetence = activeCompetence.subCompetences[indexInSubCompetencesArray];
+          subCompetenceIndexToDelete = indexInSubCompetencesArray;
+          $( "#dialog-sub-confirm" ).dialog("open");
         }
 
         function createConfirmDeleteDialog() {
@@ -285,6 +298,33 @@
           });
         }
 
+        function createConfirmDeleteSubDialog() {
+          $( "#dialog-sub-confirm" ).dialog({
+            autoOpen: false,
+            resizable: false,
+            height: "auto",
+            width: 670,
+            modal: true,
+            buttons: {
+              "Bevestigen": function() {
+                deleteSubCompetence(renderSubCompetences);
+                $( this ).dialog( "close" );
+              },
+              Cancel: function() {
+                $( this ).dialog( "close" );
+              }
+            },
+            show: {
+              effect: "blind",
+              duration: 500
+            },
+            hide: {
+              effect: "explode",
+              duration: 500
+            }
+          });
+        }
+
         function showCompetences(competencesToShow) {
          competences = competencesToShow;
           showCompetencesInternal();
@@ -297,6 +337,11 @@
         }
 
         function showDetailCompetence(competence) { 
+          activeCompetence = competence;
+          showDetailCompetenceInternal();
+        }
+
+        function showDetailCompetenceInternal() { 
           $("#competenceDetailForm").validate().resetForm();
           hideAllUi();
           $("#editCompetence").show();
@@ -304,6 +349,7 @@
         }
 
         function showDetailSubCompetence() { 
+          bindActiveCompetence();
           $("#subCompetenceDetailForm").validate().resetForm();
           hideAllUi();
           $("#editSubCompetence").show();
@@ -329,7 +375,8 @@
             $("#subCompetencesTable tbody").append("<tr><td>"+ subCompetence.name +
               "</td><td>"+ subCompetence.weight +
               "</td><td>"+ subCompetence.description +
-              "</td><td><a class=\"fas fa-edit clickable\" onclick=\"loadEditSubCompetence("+ subCompetence.id +")\"></a></td></tr>");
+              "</td><td><a class=\"fas fa-edit clickable\" onclick=\"loadEditSubCompetence("+ subCompetence.id +")\"></a>" +
+              "<a class=\"fas fa-trash-alt clickable margined-left\" onclick=\"openConfirmDeleteSubDialog("+ i +")\"></a></td></tr>");
           }
         }
 
