@@ -37,8 +37,23 @@
     </nav>
     <div id="content">
       
+      <!-- List of evaluations -->
+      <div id="listEvaluations">
+        <h1 class="display-1">Evaluaties</h1>
+        <table id="evaluationsTable" class="table">
+          <thead class="thead-dark">
+            <th>Naam</th>
+            <th>Evaluatie datum</th>
+            <th>Klas</th>
+            <th></th>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <button type="button" class="btn btn-primary" id="goToNewEvaluationButton">Nieuwe evaluatie</button>
+      </div>
+
       <!-- Create / Edit Evaluation -->
-      <div id="editEvaluation" class="container">
+      <div id="editEvaluation" class="container" style="display:none;">
         <h1 class="display-1" id="detailEvaluationTitle">Detail evaluatie</h1>
         <form id="evaluationDetailForm">
           <div class="form-group">
@@ -60,14 +75,14 @@
               
             </div>
           </div>
-          <button type="button" id="backToOverview" class="btn btn-primary">Terug naar overzicht</button>
+          <button type="button" id="backToOverviewButton" class="btn btn-primary">Terug naar overzicht</button>
           <button type="button" id="generateEvaluationResults" class="btn btn-primary">Maak evaluatie formulier</button>
         </form>
       </div>
 
       <div id="evaluationResultsDetail" >
-        <table id="evaluationResultsTable">
-          <thead></thead>
+        <table id="evaluationResultsTable" class="table">
+          <thead class="thead-dark">
           <tbody></tbody>
         </table>
       </div>
@@ -75,6 +90,7 @@
 
   
   <script>
+        var evaluations;
         var availableSchoolClasses =[];
         var competences = [];
         var activeEvaluation = getNewEvaluation();
@@ -83,21 +99,38 @@
 
         $( document ).ready(function() {
           fetchClasses(renderAvailableSchoolClasses);
-          fetchCompetences(renderCompetences)
-          renderBasicEvaluation(getNewEvaluation());
+          fetchCompetences(renderCompetences);
+          fetchEvaluations(showEvaluations);
           $("#date").datepicker({
             dateFormat: "yy-mm-dd"
           });
           $("#generateEvaluationResults").click(function(){
             generateEvaluationResults();
           });
+          $("#goToNewEvaluationButton").click(function(){
+            openNewEvaluation();
+          });
+          $("#backToOverviewButton").click(function() {
+            backToOverview();
+          });
         });
 
         /** Actionhandlers */
-      function generateEvaluationResults() {
-        bindEvaluationUiToModel();
-        generateEvaluationResultsFromEvaluationTemplate(activeEvaluation, renderEvaluationResults);
-      }
+        function backToOverview(){ 
+
+        }
+
+        function openNewEvaluation() {
+          $("#detailEvaluationTitle").text("Nieuwe evaluatie");
+          showNewEvaluation();
+        }
+
+        function generateEvaluationResults() {
+          if($("#evaluationDetailForm").valid()) {
+            bindEvaluationUiToModel();
+            generateEvaluationResultsFromEvaluationTemplate(activeEvaluation, renderEvaluationResults);
+          }
+        }
 
         /** Data fetching and binding */
         function getNewEvaluation() {
@@ -111,7 +144,7 @@
           activeEvaluation.schoolClass = availableSchoolClasses[selectedSchoolClassIndex];
           var subCompetencesInUi = $("#competenceList li");
           for(var i = 0; i < subCompetencesInUi.length; i++) {
-            if ($.inArray("selected", subCompetencesInUi[i].classList)) {
+            if ($.inArray("selected", subCompetencesInUi[i].classList) > 0) {
                 for(var j = 0; j < competences.length; j++) {
                   var comp = competences[j]
                   for(var k = 0; k < comp.subCompetences.length; k++) {
@@ -120,11 +153,50 @@
                     }
                   }
                 }
-              }
+            }
+          }
+        }
+
+        function getEvaluationResultForStudentAndSubCompetence(student, subCompetence) {
+          for(var i = 0; i < activeEvaluation.evaluationResults.length; i++) {
+            var result = activeEvaluation.evaluationResults[i];
+            if(result.subCompetence.id == subCompetence.id && result.student.id == student.id) {
+              return result;
+            }
           }
         }
 
         /** UI stuff */
+        function hideAllUi() { 
+          $("#editEvaluation").hide();
+          $("#listEvaluations").hide();
+        }
+
+        function showEvaluations(evaluationsResponse) {
+          evaluations = evaluationsResponse;
+          renderEvaluations();
+          hideAllUi();
+          $("#listEvaluations").show();
+        }
+
+        function showNewEvaluation() { 
+          $("#evaluationDetailForm").validate().resetForm();
+          hideAllUi();
+          $("#editEvaluation").show();
+          renderBasicEvaluation(getNewEvaluation());
+        }
+        
+        function renderEvaluations() { 
+          $("#evaluationsTable > tbody").html("");
+          for(var i = 0; i < evaluations.length; i++) {
+            evaluation = evaluations[i];
+            $("#evaluationsTable tbody").append("<tr><td>"+ evaluation.name +"</td><td>" + 
+              evaluation.evaluationDate + "</td><td>" + 
+              evaluation.schoolClass.name + "</td><td>" + 
+              "<a class=\"fas fa-edit clickable\" onclick=\"loadEditCompetence("+ evaluation.id +")\"></a></td></tr>");
+          }
+        }
+
         function renderAvailableSchoolClasses(classesToRender) { 
           availableSchoolClasses = classesToRender;
           for(var i = 0; i < availableSchoolClasses.length; i++) {
@@ -147,38 +219,28 @@
           }
         }
 
-
-
         function renderEvaluationResults(evaluation) { 
-          var resultsByStudent = [];
-          for(var i = 0; i < activeEvaluation.schoolClass.students.length; i++ ) {
-            resultsByStudent.push({studentName: activeEvaluation.schoolClass.students[i].name, evaluations: []});
-          }
-          for(var i = 0; i < activeEvaluation.evaluationResults.length; i++) {
-            for(var j =0; j < resultsByStudent.length; j++) {
-              if(activeEvaluation.evaluationResults[i].student.name == resultsByStudent[j].studentName) {
-                resultsByStudent[j].evaluations.push[activeEvaluation.evaluationResults[i]];
-                break;
-              }
-            }
-          }
+          activeEvaluation = evaluation;
 
           $("#evaluationResultsTable > thead").html("");
+          $("#evaluationResultsTable > thead").append("<th>Student</th>");
           for(var i = 0; i < activeEvaluation.subCompetences.length; i++) {
             $("#evaluationResultsTable > thead").append("<th>" + activeEvaluation.subCompetences[i].name + "</th>");
           }
           $("#evaluationResultsTable > tbody").html("");
-          for(var i =0; i < resultsByStudent.length; i++) {
-            $("#evaluationResultsTable > tbody").append("<tr>");
-            for(var j = 0; j < resultsByStudent[i].evaluations.length; j++) {
-              var result = resultsByStudent[i].evaluations[j];
-              if(result.subCompetence.name == activeEvaluation.subCompetences[i].name) {
-                $("#evaluationResultsTable > tbody").append("<td><input type=\"checkbox\" checked=\"" + result.passed + "\" /></td>");    
+          for(var i =0; i < activeEvaluation.schoolClass.students.length; i++) {
+            var htmlRow = "<tr><td>" + activeEvaluation.schoolClass.students[i].name + "</td>";
+            for(var j = 0; j < activeEvaluation.subCompetences.length; j++) {
+              var result = getEvaluationResultForStudentAndSubCompetence(activeEvaluation.schoolClass.students[i], activeEvaluation.subCompetences[j]);
+              htmlRow += "<td><input id=\"result_" + result.id + "\" type=\"checkbox\" ";
+              if(result.passed) {
+                htmlRow += "checked "
               }
+              htmlRow +=  "/></td>";    
             }
-            $("#evaluationResultsTable > tbody").append("</tr>");
+           htmlRow += "</tr>";
+           $("#evaluationResultsTable > tbody").append(htmlRow);
           }
-
         }
 
         function renderCompetences(competencesToRender) {
@@ -206,11 +268,13 @@
         function addFormValidationToEditEvaluation() { 
           $( "#evaluationDetailForm" ).validate( {
 				rules: {
-					name: "required",
+          name: "required",
+          date: "required",
           schoolClass: "required"
 				},
 				messages: {
-					name: "Naam is een verplicht veld",
+          name: "Naam is een verplicht veld",
+          date: "Evaluatie datum is een verplicht veld",
           schoolClass: "Klas is een verplicht veld"
 				}
         });

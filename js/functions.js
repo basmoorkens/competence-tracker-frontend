@@ -7,6 +7,15 @@ function fetchCompetences(callBack) {
       });
 }
 
+function fetchEvaluations(callBack) { 
+    $.get(applicationConfiguration.backendUrl +"/evaluations", function(response){
+        callBack(response);
+      }).fail(function(xhr) {
+            console.log(xhr);
+            alert('An unknown error occured.');
+      });
+}
+
 function fetchDetailCompetence(id, callBack) { 
     $.get(applicationConfiguration.backendUrl +"/competences/" + id, function(response){
         callBack(response);
@@ -40,7 +49,7 @@ function generateEvaluationResultsFromEvaluationTemplate(evaluation, callBack) {
         data:JSON.stringify(evaluation),
         contentType:"application/json; charset=utf-8",
         dataType:"json",
-        success: callBack(),
+        success: function (data) { callBack(data) },
         error: function(error) {
             console.log(error);
             alert('An unknown error occured.');
