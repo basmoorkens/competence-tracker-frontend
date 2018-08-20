@@ -38,7 +38,7 @@
     <div id="content">
       
       <!-- Create / Edit Evaluation -->
-      <div id="editEvaluation" class="container" style="">
+      <div id="editEvaluation" class="container">
         <h1 class="display-1" id="detailEvaluationTitle">Detail evaluatie</h1>
         <form id="evaluationDetailForm">
           <div class="form-group">
@@ -63,6 +63,13 @@
           <button type="button" id="backToOverview" class="btn btn-primary">Terug naar overzicht</button>
           <button type="button" id="generateEvaluationResults" class="btn btn-primary">Maak evaluatie formulier</button>
         </form>
+      </div>
+
+      <div id="evaluationResultsDetail" >
+        <table id="evaluationResultsTable">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
       </div>
     </div>
 
@@ -102,6 +109,19 @@
           activeEvaluation.evaluationDate = $("#date").val();
           var selectedSchoolClassIndex = $("#schoolClass").prop("selectedIndex");
           activeEvaluation.schoolClass = availableSchoolClasses[selectedSchoolClassIndex];
+          var subCompetencesInUi = $("#competenceList li");
+          for(var i = 0; i < subCompetencesInUi.length; i++) {
+            if ($.inArray("selected", subCompetencesInUi[i].classList)) {
+                for(var j = 0; j < competences.length; j++) {
+                  var comp = competences[j]
+                  for(var k = 0; k < comp.subCompetences.length; k++) {
+                    if(comp.subCompetences[k].id == subCompetencesInUi[i].value) {
+                      activeEvaluation.subCompetences.push(comp.subCompetences[k]);
+                    }
+                  }
+                }
+              }
+          }
         }
 
         /** UI stuff */
@@ -127,8 +147,38 @@
           }
         }
 
+
+
         function renderEvaluationResults(evaluation) { 
-            activeEvaluation = evaluation;
+          var resultsByStudent = [];
+          for(var i = 0; i < activeEvaluation.schoolClass.students.length; i++ ) {
+            resultsByStudent.push({studentName: activeEvaluation.schoolClass.students[i].name, evaluations: []});
+          }
+          for(var i = 0; i < activeEvaluation.evaluationResults.length; i++) {
+            for(var j =0; j < resultsByStudent.length; j++) {
+              if(activeEvaluation.evaluationResults[i].student.name == resultsByStudent[j].studentName) {
+                resultsByStudent[j].evaluations.push[activeEvaluation.evaluationResults[i]];
+                break;
+              }
+            }
+          }
+
+          $("#evaluationResultsTable > thead").html("");
+          for(var i = 0; i < activeEvaluation.subCompetences.length; i++) {
+            $("#evaluationResultsTable > thead").append("<th>" + activeEvaluation.subCompetences[i].name + "</th>");
+          }
+          $("#evaluationResultsTable > tbody").html("");
+          for(var i =0; i < resultsByStudent.length; i++) {
+            $("#evaluationResultsTable > tbody").append("<tr>");
+            for(var j = 0; j < resultsByStudent[i].evaluations.length; j++) {
+              var result = resultsByStudent[i].evaluations[j];
+              if(result.subCompetence.name == activeEvaluation.subCompetences[i].name) {
+                $("#evaluationResultsTable > tbody").append("<td><input type=\"checkbox\" checked=\"" + result.passed + "\" /></td>");    
+              }
+            }
+            $("#evaluationResultsTable > tbody").append("</tr>");
+          }
+
         }
 
         function renderCompetences(competencesToRender) {
@@ -142,7 +192,7 @@
             $("#competenceList").append("<ol id=\"comp" + competence.id  + "ol\">");
             for(var j = 0; j < competence.subCompetences.length; j++) { 
               subCompetence = competence.subCompetences[j];
-              $("#competenceList").append("<li class=\"listItem selectable\" value=\"" + competence.id + "-" + subCompetence.id + "\">" + subCompetence.name + "</li>");
+              $("#competenceList").append("<li class=\"listItem selectable\" value=\"" + subCompetence.id + "\">" + subCompetence.name + "</li>");
             }
             $("#competenceList").append("</ol>");
             $("#competenceList").append("</div>");
