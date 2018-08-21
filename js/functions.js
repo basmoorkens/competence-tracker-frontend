@@ -16,6 +16,15 @@ function fetchEvaluations(callBack) {
       });
 }
 
+function fetchEvaluation(id, callBack) { 
+    $.get(applicationConfiguration.backendUrl +"/evaluations/" + id, function(response){
+        callBack(response);
+      }).fail(function(xhr) {
+            console.log(xhr);
+            alert('An unknown error occured.');
+      });
+}
+
 function fetchDetailCompetence(id, callBack) { 
     $.get(applicationConfiguration.backendUrl +"/competences/" + id, function(response){
         callBack(response);
@@ -40,6 +49,20 @@ function fetchClasses(callBack) {
             console.log(xhr);
             alert('An unknown error occured.');
       });
+}
+
+function saveEvaluationResults(evaluationResults, callBack) { 
+    $.ajax({
+        url:applicationConfiguration.backendUrl + "/evaluationresults/save",
+        type:"POST",
+        data:JSON.stringify(evaluationResults),
+        contentType:"application/json; charset=utf-8",
+        success: function () { callBack(); },
+        error: function(error) {
+            console.log(error);
+            alert('An unknown error occured.');
+        }
+      }) 
 }
 
 function generateEvaluationResultsFromEvaluationTemplate(evaluation, callBack) { 

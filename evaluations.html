@@ -80,11 +80,22 @@
         </form>
       </div>
 
-      <div id="evaluationResultsDetail" >
+      <div id="displayEvaluation" style="display:none;">
+        <h1 class="display-1" id="detailEvaluationTitle">Detail evaluatie</h1>
+        <span>Naam:</span><span id="viewEvalName"></span>
+        <span>Datum:</span><span id="viewEvalDate"></span>
+        <span>Klas:</span><span id="viewEvalSchoolClass"></span>
+        <span>Geselecteerde subcompetenties:</span><span id="viewEvalSelectedCompetences"></span>
+      </div>
+
+      <!-- Fill in evaluation results -->
+      <div id="evaluationResultsDetail" style="display:none;">
         <table id="evaluationResultsTable" class="table">
           <thead class="thead-dark">
           <tbody></tbody>
         </table>
+        <button type="button" id="backToOverviewFromResultsButton" class="btn btn-primary">Terug naar overzicht</button>
+        <button type="button" id="saveResultsButton" class="btn btn-primary">Sla resultaten op</button>
       </div>
     </div>
 
@@ -94,13 +105,14 @@
         var availableSchoolClasses =[];
         var competences = [];
         var activeEvaluation = getNewEvaluation();
+        var evaluationResults = [];
 
         addFormValidationToEditEvaluation();
 
         $( document ).ready(function() {
           fetchClasses(renderAvailableSchoolClasses);
-          fetchCompetences(renderCompetences);
-          fetchEvaluations(showEvaluations);
+          fetchCompetences(setCompetences);
+          showEvaluationOverview();
           $("#date").datepicker({
             dateFormat: "yy-mm-dd"
           });
@@ -111,13 +123,28 @@
             openNewEvaluation();
           });
           $("#backToOverviewButton").click(function() {
-            backToOverview();
+            showEvaluationOverview();
+          });
+          $("#backToOverviewFromResultsButton").click(function() { 
+            showEvaluationOverview();
+          });
+          $("#saveResultsButton").click(function() { 
+            saveResults();
           });
         });
 
         /** Actionhandlers */
-        function backToOverview(){ 
+        function setCompetences(fetchedCompetences) {
+          competences = fetchedCompetences;
+        }
 
+        function saveResults() { 
+          bindEvaluationResultsUiToModel();
+          saveEvaluationResults(evaluationResults, showEvaluationOverview);
+        }
+
+        function showEvaluationOverview(){ 
+          fetchEvaluations(showEvaluations);
         }
 
         function openNewEvaluation() {
@@ -127,12 +154,18 @@
 
         function generateEvaluationResults() {
           if($("#evaluationDetailForm").valid()) {
+            hideAllUi();
             bindEvaluationUiToModel();
             generateEvaluationResultsFromEvaluationTemplate(activeEvaluation, renderEvaluationResults);
           }
         }
-
+        
         /** Data fetching and binding */
+        function loadEditEvaluation(id) { 
+          $("#detailEvaluationTitle").text("Detail evaluatie");
+          fetchEvaluation(id, showEditEvaluation);
+        }
+
         function getNewEvaluation() {
           return {id: -1, version: 0, name: '', evaluationDate: '', schoolClass: null, subCompetences: [], evaluationResults: []};
         }
@@ -157,10 +190,23 @@
           }
         }
 
+        function bindEvaluationResultsUiToModel() { 
+          var resultsInUi = $("#evaluationResultsTable input");
+          for(var i = 0; i < resultsInUi.length; i++) {
+            var textId = resultsInUi[i].id;
+            var id = textId.split("_")[1];
+            for(var j = 0; j < evaluationResults.length; j++) {
+              if(id == evaluationResults[j].id) { 
+                evaluationResults[j].passed = resultsInUi[i].checked;
+              }
+            }
+          }
+        }
+
         function getEvaluationResultForStudentAndSubCompetence(student, subCompetence) {
-          for(var i = 0; i < activeEvaluation.evaluationResults.length; i++) {
-            var result = activeEvaluation.evaluationResults[i];
-            if(result.subCompetence.id == subCompetence.id && result.student.id == student.id) {
+          for(var i = 0; i < evaluationResults.length; i++) {
+            var result = evaluationResults[i];
+            if(result.subCompetenceId == subCompetence.id && result.studentId == student.id) {
               return result;
             }
           }
@@ -170,6 +216,8 @@
         function hideAllUi() { 
           $("#editEvaluation").hide();
           $("#listEvaluations").hide();
+          $("#evaluationResultsDetail").hide();
+          $("#displayEvaluation").hide();
         }
 
         function showEvaluations(evaluationsResponse) {
@@ -183,8 +231,22 @@
           $("#evaluationDetailForm").validate().resetForm();
           hideAllUi();
           $("#editEvaluation").show();
-          renderBasicEvaluation(getNewEvaluation());
+          activeEvaluation = getNewEvaluation();
+          renderBasicEvaluation();
+          renderCompetences(competences);
         }
+
+        function showDisplayEvaluation() { 
+          hideAllUi();
+          $("#displayEvaluation").show();
+        }
+
+        function showEditEvaluation(evaluation) {
+          activeEvaluation = evaluation;
+          showDisplayEvaluation();
+          renderEvaluationResults(evaluation.fillInEvaluationResults);
+        }
+        
         
         function renderEvaluations() { 
           $("#evaluationsTable > tbody").html("");
@@ -193,7 +255,7 @@
             $("#evaluationsTable tbody").append("<tr><td>"+ evaluation.name +"</td><td>" + 
               evaluation.evaluationDate + "</td><td>" + 
               evaluation.schoolClass.name + "</td><td>" + 
-              "<a class=\"fas fa-edit clickable\" onclick=\"loadEditCompetence("+ evaluation.id +")\"></a></td></tr>");
+              "<a class=\"fas fa-edit clickable\" onclick=\"loadEditEvaluation("+ evaluation.id +")\"></a></td></tr>");
           }
         }
 
@@ -204,23 +266,17 @@
           }
         }
 
-        function renderFullEvaluation(evaluation) { 
-          activeEvaluation = evaluation;
-          renderBasicEvaluation(evaluation);
-          renderEvaluationResults(evaluation);
-        }
-
-        function renderBasicEvaluation(evaluation) { 
-          activeEvaluation = evaluation;
+        function renderBasicEvaluation() { 
           $("#name").val(activeEvaluation.name);
           $("#date").val(activeEvaluation.evaluationDate);
           if(activeEvaluation.schoolClass != null) { 
-            $("#schoolClass").value(activeEvaluation.schoolClass.id);
+            $("#schoolClass").val(activeEvaluation.schoolClass.id);
           }
         }
 
-        function renderEvaluationResults(evaluation) { 
-          activeEvaluation = evaluation;
+        function renderEvaluationResults(generatedResults) { 
+          $("#evaluationResultsDetail").show();
+          evaluationResults = generatedResults;
 
           $("#evaluationResultsTable > thead").html("");
           $("#evaluationResultsTable > thead").append("<th>Student</th>");
@@ -229,7 +285,7 @@
           }
           $("#evaluationResultsTable > tbody").html("");
           for(var i =0; i < activeEvaluation.schoolClass.students.length; i++) {
-            var htmlRow = "<tr><td>" + activeEvaluation.schoolClass.students[i].name + "</td>";
+            var htmlRow = "<tr><td>" + activeEvaluation.schoolClass.students[i].firstName + " " + activeEvaluation.schoolClass.students[i].name + "</td>";
             for(var j = 0; j < activeEvaluation.subCompetences.length; j++) {
               var result = getEvaluationResultForStudentAndSubCompetence(activeEvaluation.schoolClass.students[i], activeEvaluation.subCompetences[j]);
               htmlRow += "<td><input id=\"result_" + result.id + "\" type=\"checkbox\" ";
@@ -249,12 +305,18 @@
           var subCompetence;
           for(var i = 0; i < competences.length; i++) {
             competence = competences[i];
+            $("#competenceList").html("");
             $("#competenceList").append("<div class=\"compDiv\">");
             $("#competenceList").append("<h3>" + competence.name + "</h3>");
             $("#competenceList").append("<ol id=\"comp" + competence.id  + "ol\">");
             for(var j = 0; j < competence.subCompetences.length; j++) { 
               subCompetence = competence.subCompetences[j];
-              $("#competenceList").append("<li class=\"listItem selectable\" value=\"" + subCompetence.id + "\">" + subCompetence.name + "</li>");
+              var htmlLi = "<li class=\"listItem selectable ";
+              if(isSubcompetenceInActiveEvaluationPresent(subCompetence)) { 
+                htmlLi += "selected ";
+              }
+              htmlLi += "\" value=\"" + subCompetence.id + "\">" + subCompetence.name + "</li>";
+              $("#competenceList").append(htmlLi);
             }
             $("#competenceList").append("</ol>");
             $("#competenceList").append("</div>");
@@ -262,6 +324,15 @@
           $(".selectable").click(function(e) {
               $(this).toggleClass("selected");
           });
+        }
+
+        function isSubcompetenceInActiveEvaluationPresent(subCompetence) { 
+          for(var i = 0; i < activeEvaluation.subCompetences.length; i++) {
+            if(activeEvaluation.subCompetences[i].id == subCompetence.id ) {
+              return true;
+            }
+          }
+          return false;
         }
 
         /** Form validation */
