@@ -48,3 +48,8 @@
  .margined-left{
      margin-left:10px;
  }
+
+ #displayEvaluationTable {
+     margin-top: 10px;
+     margin-bottom: 10px;
+ }

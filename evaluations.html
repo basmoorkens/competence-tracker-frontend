@@ -82,14 +82,27 @@
 
       <div id="displayEvaluation" style="display:none;">
         <h1 class="display-1" id="detailEvaluationTitle">Detail evaluatie</h1>
-        <span>Naam:</span><span id="viewEvalName"></span>
-        <span>Datum:</span><span id="viewEvalDate"></span>
-        <span>Klas:</span><span id="viewEvalSchoolClass"></span>
-        <span>Geselecteerde subcompetenties:</span><span id="viewEvalSelectedCompetences"></span>
+        <table id="displayEvaluationTable" class="table">
+          <tr>
+            <td><span class="h4">Naam:</span></td><td><span id="viewEvalName"></span></td>
+          </tr>
+          <tr>
+            <td><span class="h4">Datum:</span></td><td><span id="viewEvalDate"></span></td>
+          </tr>
+          <tr>
+            <td><span class="h4">Klas:</span></td><td><span id="viewEvalSchoolClass"></span></td>
+          </tr>
+          <tr>
+            <td><span class="h4">Geselecteerde subcompetenties:</span></td><td><span id="viewEvalSelectedCompetences"></span></td>
+          </tr>
+        </table>
+        
+        
       </div>
 
       <!-- Fill in evaluation results -->
       <div id="evaluationResultsDetail" style="display:none;">
+        <h3 class="display-1" id="detailEvaluationTitle">Evaluatie resultaten</h3>
         <table id="evaluationResultsTable" class="table">
           <thead class="thead-dark">
           <tbody></tbody>
@@ -236,18 +249,29 @@
           renderCompetences(competences);
         }
 
-        function showDisplayEvaluation() { 
-          hideAllUi();
-          $("#displayEvaluation").show();
-        }
-
         function showEditEvaluation(evaluation) {
           activeEvaluation = evaluation;
           showDisplayEvaluation();
           renderEvaluationResults(evaluation.fillInEvaluationResults);
         }
+
+        function showDisplayEvaluation() { 
+          hideAllUi();
+          $("#displayEvaluation").show();
+          renderDisplayEvaluation();
+        }
         
-        
+        function renderDisplayEvaluation() {
+          $("#viewEvalName").text(activeEvaluation.name);
+          $("#viewEvalDate").text(activeEvaluation.evaluationDate);
+          $("#viewEvalSchoolClass").text(activeEvaluation.schoolClass.name);
+          var subcompetencesHtml ="";
+          for(var i = 0; i < activeEvaluation.subCompetences.length; i++) {
+            subcompetencesHtml += activeEvaluation.subCompetences[i].name + ", "
+          }
+          $("#viewEvalSelectedCompetences").text(subcompetencesHtml);
+        }
+
         function renderEvaluations() { 
           $("#evaluationsTable > tbody").html("");
           for(var i = 0; i < evaluations.length; i++) {
