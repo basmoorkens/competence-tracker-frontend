@@ -93,7 +93,7 @@
                     <label for="studentName" class="form-control-label" >Naam:</label>
                     <input type="text" id="studentName" name="studentName" class="form-control" placeholder="Vul een naam in" required />
                 </div>
-                <button type="button" id="backToEditClass" class="btn btn-primary">Terug naar bewerken competentie</button>
+                <button type="button" id="backToEditClass" class="btn btn-primary">Terug naar bewerken klas</button>
                 <button type="button" class="btn btn-success" id="saveStudentButton">Voeg toe</button>
             </form>
           </div>
@@ -122,6 +122,9 @@
           });
           $("#saveStudentButton").click(function() {
             handleSaveStudentButton();
+          });
+          $("#backToEditClass").click(function() { 
+            showDetailClass();
           });
         });
 
@@ -245,7 +248,7 @@
               "</td><td><a class=\"fas fa-edit clickable\" onclick=\"loadEditClass("+ schoolClass.id +")\"></a></td></tr>");
           }
         }
-
+        
         function showDetailClass() { 
           $("#classDetailForm").validate().resetForm();
           hideAllUi();
