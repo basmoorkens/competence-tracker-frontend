@@ -7,6 +7,15 @@ function fetchCompetences(callBack) {
       });
 }
 
+function fetchStudents(callBack) { 
+    $.get(applicationConfiguration.backendUrl +"/students", function(response){
+        callBack(response);
+      }).fail(function(xhr) {
+            console.log(xhr);
+            alert('An unknown error occured.');
+      });
+}
+
 function fetchEvaluations(callBack) { 
     $.get(applicationConfiguration.backendUrl +"/evaluations", function(response){
         callBack(response);

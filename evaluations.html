@@ -32,6 +32,9 @@
               <li class="nav-item active">
                 <a class="nav-link" href="#">Evaluaties</a>
               </li>
+              <li class="nav-item">
+                <a class="nav-link" href="students.html">Studenten</a>
+              </li>
             </ul>
           </div>
     </nav>
@@ -275,8 +278,11 @@
         function renderEvaluations() { 
           $("#evaluationsTable > tbody").html("");
           for(var i = 0; i < evaluations.length; i++) {
-            evaluation = evaluations[i];
-            $("#evaluationsTable tbody").append("<tr><td>"+ evaluation.name +"</td><td>" + 
+            renderEvaluation(evaluations[i]);
+        }
+
+        function renderEvaluation(evaluation) { 
+          $("#evaluationsTable tbody").append("<tr><td>"+ evaluation.name +"</td><td>" + 
               evaluation.evaluationDate + "</td><td>" + 
               evaluation.schoolClass.name + "</td><td>" + 
               "<a class=\"fas fa-edit clickable\" onclick=\"loadEditEvaluation("+ evaluation.id +")\"></a></td></tr>");

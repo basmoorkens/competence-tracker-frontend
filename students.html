@@ -1,9 +1,8 @@
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <title>Competentie tracker</title>
+    <title>Competentie tracker - beheer studenten</title>
 
     <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=2.0">
     <link rel="stylesheet" href="styles.css">
@@ -21,8 +20,8 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
           <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav">
-              <li class="nav-item active">
-                <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+              <li class="nav-item">
+                <a class="nav-link" href="index.html">Home <span class="sr-only">(current)</span></a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="competences.html">Competenties</a>
@@ -33,14 +32,61 @@
               <li class="nav-item">
                 <a class="nav-link" href="evaluations.html">Evaluaties</a>
               </li>
-              <li class="nav-item">
-                <a class="nav-link" href="students.html">Studenten</a>
+              <li class="nav-item active">
+                <a class="nav-link" href="#">Studenten</a>
               </li>
             </ul>
           </div>
     </nav>
-  <div id="content" class="container">
-    Welkom bij competentie tracker.
-  </div>
+   
+    <!-- List of students -->
+    <div id="listStudents">
+      <h1 class="display-1">Studenten</h1>
+      <table id="studentsTable" class="table">
+        <thead class="thead-dark">
+          <th>Voornaam</th>
+          <th>Naam</th>
+          <th>Klas</th>
+          <th></th>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+  
+  <script>
+    var students;
+
+    $( document ).ready(function() {
+      fetchStudents(showStudents);
+    });
+
+    /** UI stuff */
+    function showStudents(studentsToShow) { 
+      students = studentsToShow;
+      renderStudents();
+      hideAllUi();
+      $("#listStudents").show();
+    }
+
+    function hideAllUi() {
+      $("#listStudents").hide();
+    }
+
+    function renderStudents() {
+      $("#studentsTable > tbody").html("");
+          for(var i = 0; i < students.length; i++) {
+            renderStudent(students[i]);
+          }
+    }
+
+    function renderStudent(student) { 
+      $("#studentsTable tbody").append("<tr><td>"+ student.firstName +"</td>" + 
+      "<td>"+ student.name +"</td>" +
+      "<td>"+ student.schoolClassName +"</td>" +
+      "<td><a class=\"fas fa-edit clickable\" onclick=\"loadDisplayStudent("+ student.id +")\"></a>");
+    }
+
+  </script>
   </body>
 </html>
