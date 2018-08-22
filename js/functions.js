@@ -16,6 +16,15 @@ function fetchStudents(callBack) {
       });
 }
 
+function fetchStudent(studentId, callBack) { 
+    $.get(applicationConfiguration.backendUrl +"/students/" + studentId, function(response){
+        callBack(response);
+      }).fail(function(xhr) {
+            console.log(xhr);
+            alert('An unknown error occured.');
+      });
+}
+
 function fetchStudentsForSchoolClass(schoolClassId, callBack) { 
     $.get(applicationConfiguration.backendUrl +"/students/schoolclass/" + schoolClassId, function(response){
         callBack(response);

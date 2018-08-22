@@ -59,29 +59,60 @@
       </table>
     </div>
 
+
+    <!--Detail student -->
+    <div id="detailStudent" class="" style="display:none;">
+      <h1 class="display-1" id="detailStudentTitle">Detail student</h1>
+      <div class="form-group">
+        <label for="firstName" class="form-control-label" >Voornaam:</label>
+        <span id="firstName"></span>
+      </div>
+      <div class="form-group">
+        <label for="name" class="form-control-label" >Naam:</label>
+        <span id="name"></span>
+      </div>
+      <div class="form-group">
+        <table id="evaluationsTable"></table>
+        <table id="rapportsTable"></table>
+      </div>
+    </div>
   
   <script>
     var students;
+    var activeStudent;
     var searchSchoolClass; 
 
     $( document ).ready(function() {
       fetchStudents(showStudents);
       fetchClasses(showAvailableSchoolClasses);
       $("#schoolClassSearch").change(function() {
-        var selectedId = $("#schoolClassSearch").val();
+        handleSelectSchoolClassInSearch();
+      });
+    });
+
+    /** Actionhandlers */
+    function handleSelectSchoolClassInSearch() { 
+      var selectedId = $("#schoolClassSearch").val();
         if(selectedId == 0) {
           fetchStudents(showStudents);
         } else {
           fetchStudentsForSchoolClass(selectedId,showStudents); 
         }
-      });
-    });
+    }
 
-    /** Actionhandlers */
-
-
+    function loadDisplayStudent(studentId) {
+      fetchStudent(studentId, showDetailStudent);
+    }
 
     /** UI stuff */
+    function showDetailStudent(responseStudent) {
+      hideAllUi();
+      activeStudent = responseStudent;
+      $("#firstName").text(activeStudent.firstName);
+      $("#name").text(activeStudent.name);
+      $("#detailStudent").show();
+    }
+
     function showAvailableSchoolClasses(response) { 
       $("#schoolClassSearch").append(getHtmlForSelectSchoolClasses(response));
     }
@@ -95,6 +126,7 @@
 
     function hideAllUi() {
       $("#listStudents").hide();
+      $("#detailStudent").hide();
     }
 
     function renderStudents() {
@@ -110,7 +142,6 @@
       "<td>"+ student.schoolClassName +"</td>" +
       "<td><a class=\"fas fa-edit clickable\" onclick=\"loadDisplayStudent("+ student.id +")\"></a>");
     }
-
   </script>
   </body>
 </html>
