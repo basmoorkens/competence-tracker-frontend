@@ -16,6 +16,15 @@ function fetchStudents(callBack) {
       });
 }
 
+function fetchStudentsForSchoolClass(schoolClassId, callBack) { 
+    $.get(applicationConfiguration.backendUrl +"/students/schoolclass/" + schoolClassId, function(response){
+        callBack(response);
+      }).fail(function(xhr) {
+            console.log(xhr);
+            alert('An unknown error occured.');
+      });
+}
+
 function fetchEvaluations(callBack) { 
     $.get(applicationConfiguration.backendUrl +"/evaluations", function(response){
         callBack(response);
@@ -87,4 +96,12 @@ function generateEvaluationResultsFromEvaluationTemplate(evaluation, callBack) {
             alert('An unknown error occured.');
         }
       }) 
+}
+
+function getHtmlForSelectSchoolClasses(classesToRender) {
+    var html = "";
+    for(var i = 0; i < classesToRender.length; i++) {
+        html += "<option value=\"" + classesToRender[i].id + "\">" + classesToRender[i].name + "</option>";
+    }
+    return html;
 }

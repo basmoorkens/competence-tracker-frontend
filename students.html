@@ -42,6 +42,12 @@
     <!-- List of students -->
     <div id="listStudents">
       <h1 class="display-1">Studenten</h1>
+      <div id="searchOptions" class="col-3">
+        <span>Zoek op klas:</span>
+        <select id="schoolClassSearch" class="form-control">
+            <option value="0"></option>
+        </select>
+      </div>
       <table id="studentsTable" class="table">
         <thead class="thead-dark">
           <th>Voornaam</th>
@@ -56,12 +62,30 @@
   
   <script>
     var students;
+    var searchSchoolClass; 
 
     $( document ).ready(function() {
       fetchStudents(showStudents);
+      fetchClasses(showAvailableSchoolClasses);
+      $("#schoolClassSearch").change(function() {
+        var selectedId = $("#schoolClassSearch").val();
+        if(selectedId == 0) {
+          fetchStudents(showStudents);
+        } else {
+          fetchStudentsForSchoolClass(selectedId,showStudents); 
+        }
+      });
     });
 
+    /** Actionhandlers */
+
+
+
     /** UI stuff */
+    function showAvailableSchoolClasses(response) { 
+      $("#schoolClassSearch").append(getHtmlForSelectSchoolClasses(response));
+    }
+
     function showStudents(studentsToShow) { 
       students = studentsToShow;
       renderStudents();
