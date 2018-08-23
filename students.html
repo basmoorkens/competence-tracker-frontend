@@ -6,6 +6,9 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=2.0">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.1/css/bootstrap.css" >
+
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/dataTables.bootstrap4.min.css" >
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
@@ -15,7 +18,10 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script src="./js/functions.js"></script>    
-    <script src="./js/config.js"></script>
+    <script src="./js/config.js"></script>   
+    <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>
+
   <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
           <div class="collapse navbar-collapse" id="navbarNav">
@@ -61,20 +67,37 @@
 
 
     <!--Detail student -->
-    <div id="detailStudent" class="" style="display:none;">
+    <div id="detailStudent" style="display:none;" class="container-fluid">
       <h1 class="display-1" id="detailStudentTitle">Detail student</h1>
-      <div class="form-group">
-        <label for="firstName" class="form-control-label" >Voornaam:</label>
-        <span id="firstName"></span>
+      <div class="row">
+        <div class="col-6">
+          <h3>Basis informatie</h3>
+          <table id="displayBasicStudentTable" class="table">
+            <tr>
+              <td><span class="h4">Voornaam:</span></td><td><span id="firstName"></span></td>
+            </tr>
+            <tr>
+              <td><span class="h4">Naam:</span></td><td><span id="name"></span></td>
+            </tr>
+            <tr>
+              <td><span class="h4">Klas:</span></td><td><span id="schoolClass"></span></td>
+            </tr>
+          </table>
+        </div>
+        <div class="col">
+          <h3>Behaalde resultaten</h3>
+          <table id="evaluationsTable" class="table">
+            <thead class="thead-dark">
+              <th>Naam</th>
+              <th>Subcompetentie</th>
+              <th>Evaluatie datum</th>
+              <th>Geslaagd?</th>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
-      <div class="form-group">
-        <label for="name" class="form-control-label" >Naam:</label>
-        <span id="name"></span>
-      </div>
-      <div class="form-group">
-        <table id="evaluationsTable"></table>
-        <table id="rapportsTable"></table>
-      </div>
+      <button type="button" id="backToOverviewButton" class="btn btn-primary">Terug naar overzicht</button>
     </div>
   
   <script>
@@ -87,6 +110,9 @@
       fetchClasses(showAvailableSchoolClasses);
       $("#schoolClassSearch").change(function() {
         handleSelectSchoolClassInSearch();
+      });
+      $("#backToOverviewButton").click(function () { 
+        handleBackToOverview();
       });
     });
 
@@ -105,11 +131,39 @@
     }
 
     /** UI stuff */
+    function handleBackToOverview() { 
+      hideAllUi();
+      showStudentsInternal();
+    }
+
+    function renderStudentEvaluations() { 
+      var generatedHtml = "";
+      for(var i = 0; i < activeStudent.studentEvaluationResult.length; i++) {
+        var currentResult = activeStudent.studentEvaluationResult[i];
+        generatedHtml += "<tr><td>" + currentResult.evaluationName + "</<td>";
+        generatedHtml += "<td>" + currentResult.subCompetenceName + "</<td>";
+        generatedHtml += "<td>" + currentResult.evaluationDate + "</td>";
+        if( currentResult.passed) {
+          generatedHtml += "<td><span class=\"fas fa-check-circle\" style=\"color:green;\"></span></td></tr>";
+        } else{ 
+          generatedHtml += "<td><span class=\"fas fa-exclamation-circle\" style=\"color:red;\"></span></td></tr>";
+        }
+      }
+      $("#evaluationsTable > tbody").html(generatedHtml);
+        $('#evaluationsTable').DataTable( {
+          "language": {
+            "url": "./json/datatable_nl.json"
+          }
+        });
+    }
+
     function showDetailStudent(responseStudent) {
       hideAllUi();
       activeStudent = responseStudent;
       $("#firstName").text(activeStudent.firstName);
       $("#name").text(activeStudent.name);
+      $("#schoolClass").text(activeStudent.schoolClassName);
+      renderStudentEvaluations();
       $("#detailStudent").show();
     }
 
@@ -117,11 +171,15 @@
       $("#schoolClassSearch").append(getHtmlForSelectSchoolClasses(response));
     }
 
-    function showStudents(studentsToShow) { 
-      students = studentsToShow;
+    function showStudentsInternal() { 
       renderStudents();
       hideAllUi();
       $("#listStudents").show();
+    }
+
+    function showStudents(studentsToShow) { 
+      students = studentsToShow;
+      showStudentsInternal();
     }
 
     function hideAllUi() {
